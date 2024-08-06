@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const mongoose = require('mongoose');
+const helmet = require("helmet");
 const cookieParser = require('cookie-parser')
 const authRoute = require('./routes/auth')
 const userRoute = require('./routes/user')
@@ -25,7 +26,7 @@ mongoose.connect(process.env.MONGODB_URL, {
         console.error("Connection error", err);
     });
 const app = express()
-
+app.use(helmet)
 app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true

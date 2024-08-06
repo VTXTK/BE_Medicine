@@ -2,11 +2,20 @@ const User = require("../model/User")
 const bcrypt = require("bcrypt");
 const { json } = require("express");
 const jwt = require('jsonwebtoken')
-
+const { body, validationResult } = require("express-validator");
 let refreshTokens = []
 const autController = {
     registertUser: async (req, res) => {
         try {
+            //Kiểm tra xem đầu vào có phải là email hợp lệ không
+            await body('email').isEmail().normalizeEmail().run(req);
+            // Đảm bảo mật khẩu có độ dài ít nhất 6 ký tự
+            await body('password').isLength({ min: 6 }).trim().run(req);
+
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt)
             const userTest = await User.find()
@@ -61,6 +70,16 @@ const autController = {
     },
     loginUser: async (req, res) => {
         try {
+            //Kiểm tra xem đầu vào có phải là email hợp lệ không
+            await body('email').isEmail().normalizeEmail().run(req);
+            // Đảm bảo mật khẩu có độ dài ít nhất 6 ký tự
+            await body('password').isLength({ min: 6 }).trim().run(req);
+
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
             const email = await User.findOne({ email: req.body.email })
             if (!email) {
                 return res.status(404).json("Wrong email!")
@@ -78,9 +97,10 @@ const autController = {
                 const accessToken = autController.generateAccessToken(email)
                 const refreshToken = autController.generateRefreshToken(email)
                 refreshTokens.push(refreshToken)
+
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: false,
+                    secure: process.env.NODE_ENV === 'production', //Chỉ gửi cookie qua HTTPS
                     path: "/",
                     sameSite: "Strict"
                 })

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-
+const rateLimit = require("express-rate-limit");
 
 const middlewareController = {
     verifyToken: (req, res, next) => {
@@ -32,7 +32,12 @@ const middlewareController = {
 
         })
 
-    }
+    },
+    loginLimiter: rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 phút
+        max: 5, // Giới hạn mỗi IP 5 yêu cầu đăng nhập mỗi 15 phút
+        message: "Quá nhiều lần đăng nhập từ IP này, vui lòng thử lại sau 15 phút"
+    }),
 }
 
 module.exports = middlewareController
