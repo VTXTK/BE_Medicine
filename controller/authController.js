@@ -12,12 +12,15 @@ const autController = {
             // Đảm bảo mật khẩu có độ dài ít nhất 6 ký tự
             await body('password').isLength({ min: 6 }).trim().run(req);
 
+            console.log(`Email sau khi normalize: ${req.body.email}`);
+            console.log(`Password sau khi trim: ${req.body.password}`);
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
             }
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt)
+            console.log(`hashed : ${hashed}`)
             const userTest = await User.find()
             let id
             do {
